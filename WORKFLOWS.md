@@ -1,10 +1,10 @@
 # Loopio MCP Server (STDIO)
 
-A Model Context Protocol (MCP) server that provides access to the Loopio Library Entries API via STDIO transport. This server exposes Loopio's library management capabilities through MCP tools, resources, and prompts for use with VS Code and other MCP clients.
+This is a Model Context Protocol (MCP) server that provides comprehensive programmatic access to the Loopio Public API v2 via STDIO transport. It exposes **51 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, templates, and file management. It's designed to integrate with VS Code and GitHub Copilot, enabling AI-powered access to your entire Loopio workspace - from content library management to project collaboration and workflow automation.
+
 
 ## Workflows
 
-1. Sales Reps self serving on Loopio Library Question 
-2. First pass answering projects 
-3. Long term library refinement and management 
-
+1. Sales Representative self serving on RFP related questions. 
+2. First pass on answering project questions leveraging the library. 
+3. Long term library refinement and management.
