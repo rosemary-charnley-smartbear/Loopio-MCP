@@ -70,6 +70,15 @@ export class LoopioApiClient {
     return response.json() as Promise<T>;
   }
 
+  // Customer endpoints
+  async getCustomerActiveLanguages(customerId: number): Promise<string[]> {
+    return this.request<string[]>(`/customers/${customerId}/activeLanguages`);
+  }
+
+  async getCustomer(customerId: number): Promise<{ id: number; guid: string }> {
+    return this.request<{ id: number; guid: string }>(`/customers/${customerId}`);
+  }
+
   // Library Entries endpoints
   async listLibraryEntries(params: {
     page?: number;
@@ -104,34 +113,6 @@ export class LoopioApiClient {
     );
   }
 
-  async createLibraryEntry(
-    entry: CreateLibraryEntryRequest
-  ): Promise<LibraryEntry> {
-    return this.request<LibraryEntry>("/libraryEntries", {
-      method: "POST",
-      body: entry,
-    });
-  }
-
-  async updateLibraryEntry(
-    libraryEntryId: number,
-    operations: JsonPatchOperation[]
-  ): Promise<LibraryEntry> {
-    return this.request<LibraryEntry>(`/libraryEntries/${libraryEntryId}`, {
-      method: "PATCH",
-      body: operations,
-      headers: {
-        "Content-Type": "application/json-patch+json",
-      },
-    });
-  }
-
-  async deleteLibraryEntry(libraryEntryId: number): Promise<void> {
-    return this.request<void>(`/libraryEntries/${libraryEntryId}`, {
-      method: "DELETE",
-    });
-  }
-
   async getLibraryEntryAttachments(
     libraryEntryId: number
   ): Promise<PaginatedResponse<File>> {
@@ -164,15 +145,6 @@ export class LoopioApiClient {
     );
   }
 
-  async bulkCreateLibraryEntries(
-    entries: CreateLibraryEntryRequest[]
-  ): Promise<{ taskId: string }> {
-    return this.request<{ taskId: string }>("/libraryEntries/bulk", {
-      method: "POST",
-      body: { entries },
-    });
-  }
-
   // Stacks endpoints
   async listStacks(fields?: string): Promise<Stack[]> {
     const queryParams = new URLSearchParams();
@@ -185,12 +157,6 @@ export class LoopioApiClient {
   // Files endpoints
   async showFile(fileId: number): Promise<File> {
     return this.request<File>(`/files/${fileId}`);
-  }
-
-  async deleteFile(fileId: number): Promise<void> {
-    return this.request<void>(`/files/${fileId}`, {
-      method: "DELETE",
-    });
   }
 
   // Projects endpoints
@@ -222,26 +188,6 @@ export class LoopioApiClient {
     return this.request<Project>(`/projects/${projectId}${query ? `?${query}` : ""}`);
   }
 
-  async createProject(project: CreateProjectRequest): Promise<Project> {
-    return this.request<Project>("/projects", {
-      method: "POST",
-      body: project,
-    });
-  }
-
-  async updateProject(projectId: number, updates: { status: string }): Promise<Project> {
-    return this.request<Project>(`/projects/${projectId}`, {
-      method: "PUT",
-      body: updates,
-    });
-  }
-
-  async deleteProject(projectId: number): Promise<void> {
-    return this.request<void>(`/projects/${projectId}`, {
-      method: "DELETE",
-    });
-  }
-
   async getProjectSummary(projectId: number): Promise<ProjectSummary> {
     return this.request<ProjectSummary>(`/projects/${projectId}/summary`);
   }
@@ -262,72 +208,14 @@ export class LoopioApiClient {
     return this.request<ComplianceSet>(`/projects/${projectId}/complianceSets/${complianceSetId}`);
   }
 
-  async createComplianceSet(
-    projectId: number,
-    data: { label: string; shortName: string; options: ComplianceOption[] }
-  ): Promise<ComplianceSet> {
-    return this.request<ComplianceSet>(`/projects/${projectId}/complianceSets`, {
-      method: "POST",
-      body: data,
-    });
-  }
-
-  async updateProjectComplianceSet(
-    projectId: number,
-    complianceSetId: number,
-    data: { label: string; shortName: string; options: ComplianceOption[] }
-  ): Promise<ComplianceSet> {
-    return this.request<ComplianceSet>(
-      `/projects/${projectId}/complianceSets/${complianceSetId}`,
-      {
-        method: "PUT",
-        body: data,
-      }
-    );
-  }
-
-  async deleteProjectComplianceSet(projectId: number, complianceSetId: number): Promise<void> {
-    return this.request<void>(`/projects/${projectId}/complianceSets/${complianceSetId}`, {
-      method: "DELETE",
-    });
-  }
-
   // Project Participants endpoints
   async getProjectParticipants(projectId: number): Promise<ParticipantReference[]> {
     return this.request<ParticipantReference[]>(`/projects/${projectId}/participants`);
   }
 
-  async updateProjectParticipants(
-    projectId: number,
-    participants: ParticipantReference[]
-  ): Promise<ParticipantReference[]> {
-    return this.request<ParticipantReference[]>(`/projects/${projectId}/participants`, {
-      method: "PUT",
-      body: participants,
-    });
-  }
-
   // Project Source Documents endpoints
   async listProjectSourceDocuments(projectId: number): Promise<File[]> {
     return this.request<File[]>(`/projects/${projectId}/sourceDocuments`);
-  }
-
-  async addProjectSourceDocument(projectId: number, formData: FormData): Promise<File> {
-    const url = `${this.config.apiBaseUrl}/projects/${projectId}/sourceDocuments`;
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${this.config.accessToken}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to upload source document: ${response.status} - ${errorText}`);
-    }
-
-    return response.json() as Promise<File>;
   }
 
   // Custom Project Fields endpoints
@@ -336,19 +224,6 @@ export class LoopioApiClient {
   ): Promise<Record<string, string | null>> {
     return this.request<Record<string, string | null>>(
       `/projects/${projectId}/customProjectFields`
-    );
-  }
-
-  async setCustomProjectFieldValuesForProject(
-    projectId: number,
-    values: Record<string, string>
-  ): Promise<Record<string, string | null>> {
-    return this.request<Record<string, string | null>>(
-      `/projects/${projectId}/customProjectFields`,
-      {
-        method: "PATCH",
-        body: values,
-      }
     );
   }
 
@@ -362,62 +237,6 @@ export class LoopioApiClient {
 
   async getCustomProjectField(id: number): Promise<CustomProjectField> {
     return this.request<CustomProjectField>(`/customProjectFields/${id}`);
-  }
-
-  async createCustomProjectField(
-    field: CreateCustomProjectFieldRequest
-  ): Promise<CustomProjectField> {
-    return this.request<CustomProjectField>("/customProjectFields", {
-      method: "POST",
-      body: field,
-    });
-  }
-
-  async updateCustomProjectField(
-    id: number,
-    operations: JsonPatchOperation[]
-  ): Promise<CustomProjectField> {
-    return this.request<CustomProjectField>(`/customProjectFields/${id}`, {
-      method: "PATCH",
-      body: operations,
-      headers: {
-        "Content-Type": "application/json-patch+json",
-      },
-    });
-  }
-
-  async deleteCustomProjectField(id: number): Promise<void> {
-    return this.request<void>(`/customProjectFields/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // Project Templates endpoints
-  async listProjectTemplates(params: {
-    page?: number;
-    pageSize?: number;
-  }): Promise<PaginatedResponse<ProjectTemplate>> {
-    const queryParams = new URLSearchParams();
-    if (params.page) queryParams.append("page", params.page.toString());
-    if (params.pageSize) queryParams.append("pageSize", params.pageSize.toString());
-
-    const query = queryParams.toString();
-    return this.request<PaginatedResponse<ProjectTemplate>>(
-      `/projectTemplates${query ? `?${query}` : ""}`
-    );
-  }
-
-  async createProjectFromTemplate(
-    projectTemplateId: number,
-    projectData: CreateProjectRequest
-  ): Promise<{ taskId: string; projectId: number }> {
-    return this.request<{ taskId: string; projectId: number }>(
-      `/projectTemplates/${projectTemplateId}/projects`,
-      {
-        method: "POST",
-        body: projectData,
-      }
-    );
   }
 
   // Project Entries endpoints
@@ -456,29 +275,6 @@ export class LoopioApiClient {
     );
   }
 
-  async createProjectEntry(entry: CreateProjectEntryRequest): Promise<ProjectEntry> {
-    return this.request<ProjectEntry>("/projectEntries", {
-      method: "POST",
-      body: entry,
-    });
-  }
-
-  async updateProjectEntry(
-    projectEntryId: number,
-    updates: Partial<CreateProjectEntryRequest>
-  ): Promise<ProjectEntry> {
-    return this.request<ProjectEntry>(`/projectEntries/${projectEntryId}`, {
-      method: "PUT",
-      body: updates,
-    });
-  }
-
-  async deleteProjectEntry(projectEntryId: number): Promise<void> {
-    return this.request<void>(`/projectEntries/${projectEntryId}`, {
-      method: "DELETE",
-    });
-  }
-
   // Sections endpoints
   async listProjectSections(params: {
     projectId: number;
@@ -497,26 +293,6 @@ export class LoopioApiClient {
 
   async getProjectSection(sectionId: number): Promise<Section> {
     return this.request<Section>(`/sections/${sectionId}`);
-  }
-
-  async createProjectSection(section: CreateSectionRequest): Promise<Section> {
-    return this.request<Section>("/sections", {
-      method: "POST",
-      body: section,
-    });
-  }
-
-  async updateProjectSection(sectionId: number, updates: Partial<CreateSectionRequest>): Promise<Section> {
-    return this.request<Section>(`/sections/${sectionId}`, {
-      method: "PUT",
-      body: updates,
-    });
-  }
-
-  async deleteProjectSection(sectionId: number): Promise<void> {
-    return this.request<void>(`/sections/${sectionId}`, {
-      method: "DELETE",
-    });
   }
 
   // SubSections endpoints
@@ -539,28 +315,5 @@ export class LoopioApiClient {
 
   async getProjectSubSection(subSectionId: number): Promise<SubSection> {
     return this.request<SubSection>(`/subSections/${subSectionId}`);
-  }
-
-  async createProjectSubSection(subSection: CreateSubSectionRequest): Promise<SubSection> {
-    return this.request<SubSection>("/subSections", {
-      method: "POST",
-      body: subSection,
-    });
-  }
-
-  async updateProjectSubSection(
-    subSectionId: number,
-    updates: Partial<CreateSubSectionRequest>
-  ): Promise<SubSection> {
-    return this.request<SubSection>(`/subSections/${subSectionId}`, {
-      method: "PUT",
-      body: updates,
-    });
-  }
-
-  async deleteProjectSubSection(subSectionId: number): Promise<void> {
-    return this.request<void>(`/subSections/${subSectionId}`, {
-      method: "DELETE",
-    });
   }
 }

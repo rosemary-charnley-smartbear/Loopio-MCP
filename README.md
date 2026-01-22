@@ -1,87 +1,74 @@
-# Loopio MCP Server (STDIO)
+# Loopio MCP Server (STDIO) - Sales Representative Edition
 
-This is a Model Context Protocol (MCP) server that provides comprehensive programmatic access to the Loopio Public API v2 via STDIO transport. It exposes **51 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, templates, and file management. It's designed to integrate with VS Code and GitHub Copilot, enabling AI-powered access to your entire Loopio workspace - from content library management to project collaboration and workflow automation.
+This is a Model Context Protocol (MCP) server that provides read-only access to the Loopio Public API v2 via STDIO transport. It exposes **24 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, and file viewing - designed specifically for sales representatives. It integrates with VS Code and GitHub Copilot, enabling AI-powered read access to your Loopio workspace.
 
 ## Features
 
-This MCP server provides **51 tools** for comprehensive Loopio API access:
+This MCP server provides **24 read-only tools** for Loopio API access:
 
-### Library Entry Tools (9)
+### Customer Tools (2)
+- **getCustomerActiveLanguages** - Get all languages in use in a customer's library entries
+- **getCustomer** - Get customer ID and GUID
+
+### Library Entry Tools (5)
 - **listLibraryEntries** - List and search library entries with advanced filtering
 - **getLibraryEntry** - Get a specific library entry by ID
-- **createLibraryEntry** - Create new library entries
-- **updateLibraryEntry** - Update library entries using JSON Patch operations
-- **deleteLibraryEntry** - Delete library entries
 - **getLibraryEntryAttachments** - Get attachments for a library entry
 - **getLibraryEntryHistory** - Get the history of changes to a library entry
 - **getLibraryEntryHistoryItem** - Get a specific history item
-- **bulkCreateLibraryEntries** - Create multiple library entries at once
 
-### Stacks & Files (3)
+### Stacks & Files (2)
 - **listStacks** - List available stacks (library structure)
 - **showFile** - Get file information
-- **deleteFile** - Delete a file
 
-### Projects (8)
+### Projects (5)
 - **listProjects** - List projects with filters
 - **getProject** - Get a specific project by ID
-- **createProject** - Create a new project
-- **updateProject** - Update project status
-- **deleteProject** - Delete a project
 - **getProjectSummary** - Get project summary
 - **getProjectSummaryList** - Get list of project summaries
 - **listProjectSourceDocuments** - List source documents for a project
 
-### Project Compliance Sets (5)
+### Project Compliance Sets (2)
 - **getProjectComplianceSets** - List compliance sets for a project
 - **getProjectComplianceSet** - Get a specific compliance set
-- **createComplianceSet** - Create a new compliance set
-- **updateProjectComplianceSet** - Update a compliance set
-- **deleteProjectComplianceSet** - Delete a compliance set
 
-### Project Participants (2)
+### Project Participants (1)
 - **getProjectParticipants** - Get project participants
-- **updateProjectParticipants** - Update project participants
 
-### Custom Project Fields (7)
+### Custom Project Fields (3)
 - **listCustomProjectFields** - List custom project fields
 - **getCustomProjectField** - Get a specific custom field
-- **createCustomProjectField** - Create a new custom field
-- **updateCustomProjectField** - Update a custom field
+- **getCustomProjectFieldValuesForProject** - Get custom field values for a project
 - **deleteCustomProjectField** - Delete a custom field
 - **getCustomProjectFieldValuesForProject** - Get custom field values for a project
 - **setCustomProjectFieldValuesForProject** - Set custom field values for a project
 
-### Project Templates (2)
-- **listProjectTemplates** - List available project templates
-- **createProjectFromTemplate** - Create project from template
-
-### Project Entries (5)
+### Project Entries (2)
 - **listProjectEntries** - List entries in a project
 - **getProjectEntry** - Get a specific project entry
-- **createProjectEntry** - Create a new project entry
-- **updateProjectEntry** - Update a project entry
-- **deleteProjectEntry** - Delete a project entry
 
-### Project Sections (5)
+### Project Sections (2)
 - **listProjectSections** - List sections in a project
 - **getProjectSection** - Get a specific section
-- **createProjectSection** - Create a new section
-- **updateProjectSection** - Update a section
-- **deleteProjectSection** - Delete a section
 
-### Project SubSections (5)
+### Project SubSections (2)
 - **listProjectSubSections** - List subsections
 - **getProjectSubSection** - Get a specific subsection
-- **createProjectSubSection** - Create a new subsection
-- **updateProjectSubSection** - Update a subsection
-- **deleteProjectSubSection** - Delete a subsection
 
 ### Resources
 - **loopio://libraryEntry/{id}** - Access individual library entries as resources
 
 ### Prompts
 - **searchLibraryEntries** - Search library entries with natural language queries
+
+## Key Features
+
+- **Read-Only Access**: All operations are read-only (GET requests), ensuring data safety
+- **Sales Representative Focused**: Tailored for sales team members who need to view and search content
+- **Customer Information**: Access customer details and active languages
+- **Library Management**: Search, browse, and view library entries with full history
+- **Project Visibility**: View projects, summaries, and all associated data
+- **Custom Fields**: Access custom project field definitions and values
 
 ## Installation and Setup
 

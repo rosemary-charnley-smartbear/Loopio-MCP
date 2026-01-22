@@ -13,9 +13,131 @@ servers:
   - url: 'https://api.loopio.com/data/v2'
     description: Production server for the American datacenter
 tags:
+  - name: Customers
+    description: Get information about Customer instances
+  - name: Custom Project Fields
+    description: Create and manage Custom Project Fields
+  - name: Files
+    description: Manage Loopio files
   - name: Library Entries
     description: Create and manage Library Entries
+  - name: Projects
+    description: Create and manage Projects
+  - name: Project Templates
+    description: Get Information about Project Templates
+  - name: Stacks
+    description: View accessible stacks or Library structure
 paths:
+  '/customers/{customerId}/activeLanguages':
+    parameters:
+      - $ref: '#/components/parameters/customerId'
+    get:
+      tags:
+        - Customers
+      summary: Get all the languages in use in a customer's collection of library entries
+      operationId: getCustomerActiveLanguages
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/Language'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'customer.info:read'
+  '/customers/{customerId}':
+    parameters:
+      - $ref: '#/components/parameters/customerId'
+    get:
+      tags:
+        - Customers
+      summary: Get the id and guid for a given Customer
+      operationId: getCustomer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: integer
+                  guid:
+                    type: string
+                required:
+                  - id
+                  - guid
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'customer.info:read'
+  '/files/{fileId}':
+    parameters:
+      - $ref: '#/components/parameters/fileId'
+    get:
+      tags:
+        - Files
+      summary: Show information about a file
+      operationId: showFile
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/File'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'file:read'
+  '/crm/{opportunityID}/projects':
+    parameters:
+      - name: opportunityID
+        in: path
+        required: true
+        schema:
+          type: string
+      - name: crmType
+        in: query
+        required: true
+        schema:
+          type: string
+          enum:
+            - MS_DYNAMICS
+            - SALESFORCE
+    get:
+      tags:
+        - CRM
+      summary: Get the list of viewable Projects associated with a given CRM Opportunity
+      operationId: listCRMProjects
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  projectIDs:
+                    type: array
+                    items:
+                      type: integer
+      security:
+        - loopio_auth:
+            - 'crm:read'
   /libraryEntries:
     get:
       parameters:
@@ -130,133 +252,6 @@ paths:
       security:
         - loopio_auth:
             - 'library:read'
-    post:
-      tags:
-        - Library Entries
-      summary: Create a Library Entry
-      description: |-
-        Answer text for an Entry can be null if its Questions have Compliance Answers.
-        Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.
-      operationId: createLibraryEntry
-      requestBody:
-        description: 'Library entry to create. __Warning:__ This does not currently support creating library entries with merge variables in the answer text.'
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                questions:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      text:
-                        type: string
-                        description: Question text. Surrounding white space will be trimmed  before checking the length against a minLength parameter.
-                        example: What is Loopio?
-                        minLength: 1
-                        maxLength: 65535
-                      complianceOption:
-                        type: object
-                        nullable: true
-                        properties:
-                          text:
-                            type: string
-                            example: 'Yes'
-                            minLength: 1
-                            maxLength: 45
-                            nullable: true
-                    required:
-                      - text
-                  minItems: 1
-                  description: A question and possible variations which utilize the same answer
-                answer:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                      nullable: true
-                      maxLength: 65535
-                      example: Loopio is RFP response software
-                  required:
-                    - text
-                languageCode:
-                  $ref: '#/components/schemas/LanguageCode'
-                location:
-                  type: object
-                  properties:
-                    stackID:
-                      type: integer
-                    categoryID:
-                      type: integer
-                    subCategoryID:
-                      type: integer
-                      description: A subCategoryID value should only be set when a categoryID is defined
-                  required:
-                    - stackID
-                tags:
-                  type: array
-                  items:
-                    type: string
-                    maxLength: 100
-                    example: company overview
-              required:
-                - questions
-                - answer
-                - location
-        required: true
-      responses:
-        '201':
-          description: CREATED
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LibraryEntry'
-        '400':
-          $ref: '#/components/responses/400'
-        '403':
-          $ref: '#/components/responses/403'
-      security:
-        - loopio_auth:
-            - 'library:write'
-  /libraryEntries/bulk:
-    post:
-      tags:
-        - Library Entries
-        - Asynchronous
-      summary: Bulk create Library Entries
-      description: |-
-        Answer text for an Entry can be null if its Questions have Compliance Answers.
-        Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.
-      operationId: bulkCreateLibraryEntries
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                createMissingLocations:
-                  type: boolean
-                  default: false
-                entries:
-                  type: array
-                  minItems: 1
-                  maxItems: 500
-                  items:
-                    $ref: '#/components/schemas/LibraryEntryBulk'
-              required:
-                - entries
-      responses:
-        '202':
-          $ref: '#/components/responses/AsyncTaskAccepted'
-        '400':
-          $ref: '#/components/responses/400'
-        '403':
-          $ref: '#/components/responses/403'
-      security:
-        - loopio_auth:
-            - 'library:write'
   '/libraryEntries/{libraryEntryId}':
     parameters:
       - name: libraryEntryId
@@ -299,82 +294,6 @@ paths:
       security:
         - loopio_auth:
             - 'library:read'
-    patch:
-      tags:
-        - Library Entries
-      summary: Update core properties of a Library Entry
-      operationId: updateLibraryEntry
-      requestBody:
-        description: |-
-          Library Entry properties to set. __Warning:__ Updating answer text with merge variables will remove the merge variable.
-          Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.
-        content:
-          application/json-patch+json:
-            schema:
-              $ref: '#/components/schemas/JsonPatch'
-            examples:
-              Change answer and tags:
-                value:
-                  - op: replace
-                    path: /answer/text
-                    value: new answer
-                  - op: add
-                    path: /tags/-
-                    value: new tag
-              Move Entry:
-                value:
-                  - op: replace
-                    path: /location
-                    value:
-                      stackId: 7
-                      categoryId: null
-                      subCategoryId: null
-              Manage questions:
-                value:
-                  - op: replace
-                    path: /questions/1/text
-                    value: better question text
-                  - op: add
-                    path: /questions/-
-                    value:
-                      text: new question
-                      complianceOption: null
-                  - op: move
-                    from: /questions/2
-                    path: /questions/0
-        required: true
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LibraryEntry'
-        '400':
-          $ref: '#/components/responses/InvalidJSONPatchDocument'
-        '403':
-          $ref: '#/components/responses/403'
-        '404':
-          $ref: '#/components/responses/404'
-        '422':
-          $ref: '#/components/responses/UnprocessableJSONPatchRequest'
-      security:
-        - loopio_auth:
-            - 'library:write'
-    delete:
-      tags:
-        - Library Entries
-      operationId: deleteLibraryEntry
-      responses:
-        '204':
-          description: No Content
-        '403':
-          $ref: '#/components/responses/403'
-        '404':
-          $ref: '#/components/responses/404'
-      security:
-        - loopio_auth:
-            - 'library:delete'
   '/libraryEntries/{libraryEntryId}/attachments':
     parameters:
       - name: libraryEntryId
@@ -486,6 +405,651 @@ paths:
       security:
         - loopio_auth:
             - 'library:read'
+  /stacks:
+    parameters:
+      - name: fields
+        in: query
+        description: Fields included in response
+        schema:
+          type: string
+          enum:
+            - '@wide'
+          example: '@wide'
+    get:
+      tags:
+        - Stacks
+      summary: List accessible stacks; View full Library structure
+      operationId: listStacks
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                    example: 100
+                  totalPages:
+                    type: integer
+                    example: 10
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Stack'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+      security:
+        - loopio_auth:
+            - 'library:read'
+  '/projects/{projectId}/complianceSets':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+      summary: Get the Compliance Sets for a Project
+      description: |-
+        Note: Confidential projects are currently not supported via API.
+
+         Note: We are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.
+      operationId: getProjectComplianceSets
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ComplianceSet'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+  '/projects/{projectId}/complianceSets/{complianceSetId}':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+      - name: complianceSetId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+      summary: Get a Compliance Set for a Project
+      description: |-
+        Note: Confidential projects are currently not supported via API.
+
+         Note: We are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets.  The API will be updated to reflect this change at a later time.
+      operationId: getProjectComplianceSet
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceSet'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /projects:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - $ref: '#/components/parameters/RfxTypes'
+        - $ref: '#/components/parameters/Owners'
+      tags:
+        - Projects
+      summary: List projects you can interact with
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: listProjects
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Project'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+        '400':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                name: VALIDATION_ERROR
+                message: Array has invalid values or Value is not an integer
+                debugId: 0fas3
+        '403':
+          $ref: '#/components/responses/403'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projects/{projectId}':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+      summary: Get a Project's data
+      description: 'Note: Confidential projects are currently not supported via API.'
+      parameters:
+        - name: fields
+          in: query
+          required: false
+          schema:
+            type: string
+            enum:
+              - '@narrow'
+              - '@wide'
+            default: '@narrow'
+      operationId: getProject
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                anyOf:
+                  - $ref: '#/components/schemas/Project'
+                  - $ref: '#/components/schemas/ProjectWide'
+              examples:
+                '@narrow':
+                  $ref: '#/components/examples/ProjectNarrow'
+                '@wide':
+                  $ref: '#/components/examples/ProjectWide'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projects/{projectId}/customProjectFields':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+        - Custom Project Fields
+      summary: Get Custom Project Field values for a given Project
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getCustomProjectFieldValuesForProject
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomProjectFieldValuesMap'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projects/{projectId}/summary':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+      summary: Get the status summary of a Project
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectSummary
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectSummary'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          description: Resource not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                name: RESOURCE_NOT_FOUND
+                message: Resource not found
+                debugId: 0fas3
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  /projects/summary:
+    parameters:
+      - name: lastUpdatedDateGt
+        in: query
+        required: true
+        schema:
+          type: string
+    get:
+      tags:
+        - Projects
+      summary: Get the status summary list of Projects filtered by date last synced
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectSummaryList
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectSummary'
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+        '500':
+          description: Fatal Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projects/{projectId}/sourceDocuments':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+        - Files
+      summary: View basic information on a Project's source files
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: listProjectSourceDocuments
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                  totalPages:
+                    type: integer
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ProjectSourceFile'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projects/{projectId}/participants':
+    parameters:
+      - name: projectId
+        in: path
+        required: true
+        schema:
+          type: integer
+    get:
+      tags:
+        - Projects
+      summary: Get the participants for a Project
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectParticipants
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ParticipantReference'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project.participant:read'
+  /customProjectFields:
+    get:
+      tags:
+        - Custom Project Fields
+      summary: List defined Custom Project Fields
+      operationId: listCustomProjectFields
+      parameters:
+        - name: source
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/CustomProjectFieldInputSource'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomProjectField'
+        '403':
+          $ref: '#/components/responses/403'
+      security:
+        - loopio_auth:
+            - 'customProjectField:read'
+  '/customProjectFields/{id}':
+    parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+    get:
+      tags:
+        - Custom Project Fields
+      summary: Get a Custom Project Field
+      operationId: getCustomProjectField
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomProjectField'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'customProjectField:read'
+  /projectEntries:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/RequiredProjectId'
+        - $ref: '#/components/parameters/QueryParamSectionId'
+        - $ref: '#/components/parameters/QueryParamSubSectionId'
+        - $ref: '#/components/parameters/QueryParamInlineOptions'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      tags:
+        - Projects
+      summary: List your Project Entries
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: listProjectEntries
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                    example: 100
+                  totalPages:
+                    type: integer
+                    example: 10
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Entry'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+        '400':
+          $ref: '#/components/responses/400'
+        '403':
+          $ref: '#/components/responses/403'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/projectEntries/{projectEntryId}':
+    parameters:
+      - $ref: '#/components/parameters/ProjectEntryId'
+      - $ref: '#/components/parameters/QueryParamInlineOptions'
+    get:
+      tags:
+        - Projects
+      summary: Retrieve a specific Project Entry
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectEntry
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Entry'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  /sections:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/RequiredProjectId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      tags:
+        - Projects
+      summary: List your Project sections
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: listProjectSections
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                    example: 100
+                  totalPages:
+                    type: integer
+                    example: 10
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Section'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+        '400':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                name: VALIDATION_ERROR
+                message: Invalid projectId
+                debugId: 0fas5
+        '403':
+          $ref: '#/components/responses/403'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/sections/{sectionId}':
+    get:
+      parameters:
+        - $ref: '#/components/parameters/SectionId'
+      tags:
+        - Projects
+      summary: Retrieve a specific Project section
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectSection
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Section'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  /subSections:
+    get:
+      parameters:
+        - $ref: '#/components/parameters/RequiredProjectId'
+        - $ref: '#/components/parameters/QueryParamSectionId'
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      tags:
+        - Projects
+      summary: List your Project subSections
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: listProjectSubSections
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalItems:
+                    type: integer
+                    example: 100
+                  totalPages:
+                    type: integer
+                    example: 10
+                  items:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SubSection'
+                required:
+                  - totalItems
+                  - totalPages
+                  - items
+        '400':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                name: VALIDATION_ERROR
+                message: The project does not exist or has been deleted
+                debugId: 0fas5
+        '403':
+          $ref: '#/components/responses/403'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/subSections/{subSectionId}':
+    get:
+      parameters:
+        - $ref: '#/components/parameters/SubSectionId'
+      tags:
+        - Projects
+      summary: Retrieve a specific Project subSection
+      description: 'Note: Confidential projects are currently not supported via API.'
+      operationId: getProjectSubQuestion
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubSection'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+        - loopio_auth:
+            - 'project:read'
+  '/webhookSubscriptions/{subscriptionId}':
+    parameters:
+      - $ref: '#/components/parameters/SubscriptionId'
+  '/webhookSubscriptions/{subscriptionId}/signingSecret':
+    parameters:
+      - $ref: '#/components/parameters/SubscriptionId'
 components:
   securitySchemes:
     loopio_auth:
@@ -936,177 +1500,6 @@ components:
                   type: string
                   example: Canada
                   maxLength: 100
-    LibraryEntryBulk:
-      type: object
-      properties:
-        questions:
-          type: array
-          items:
-            type: object
-            properties:
-              text:
-                type: string
-                description: Question text
-                example: What is Loopio?
-                maxLength: 65535
-              complianceOption:
-                description: 'Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.'
-                type: object
-                nullable: true
-                properties:
-                  text:
-                    type: string
-                    example: 'Yes'
-                    maxLength: 45
-                    nullable: true
-            required:
-              - text
-          minItems: 1
-          description: A question and possible variations which utilize the same answer
-        answer:
-          type: object
-          properties:
-            text:
-              type: string
-              nullable: true
-              maxLength: 65535
-              example: Loopio is RFP response software
-          required:
-            - text
-        languageCode:
-          $ref: '#/components/schemas/LanguageCode'
-        location:
-          type: object
-          properties:
-            stack:
-              type: object
-              properties:
-                name:
-                  type: string
-                  maxLength: 64
-              required:
-                - name
-            category:
-              type: object
-              properties:
-                name:
-                  type: string
-                  maxLength: 100
-              required:
-                - name
-            subCategory:
-              type: object
-              properties:
-                name:
-                  type: string
-                  maxLength: 100
-              required:
-                - name
-          required:
-            - stack
-        tags:
-          type: array
-          items:
-            type: string
-            maxLength: 100
-            example: company overview
-      required:
-        - questions
-        - answer
-        - location
-    JsonPath:
-      type: string
-    JsonPatch:
-      type: array
-      items:
-        allOf:
-          - properties:
-              path:
-                allOf:
-                  - description: A JSON Pointer path.
-                  - $ref: '#/components/schemas/JsonPath'
-            required:
-              - path
-          - oneOf:
-              - required:
-                  - path
-                  - value
-                  - op
-                properties:
-                  op:
-                    description: The operation to perform.
-                    type: string
-                    enum:
-                      - add
-                      - replace
-                      - test
-                  value:
-                    description: 'The value to add, replace or test.'
-              - required:
-                  - path
-                  - op
-                properties:
-                  op:
-                    description: The operation to perform.
-                    type: string
-                    enum:
-                      - remove
-              - required:
-                  - path
-                  - from
-                  - op
-                properties:
-                  op:
-                    description: The operation to perform.
-                    type: string
-                    enum:
-                      - move
-                      - copy
-                  from:
-                    allOf:
-                      - description: A JSON Pointer path pointing to the location to move/copy from.
-                      - $ref: '#/components/schemas/JsonPath'
-    LibraryLinks:
-      type: object
-      properties:
-        id:
-          type: integer
-        libraryEntry:
-          type: object
-          properties:
-            id:
-              type: integer
-            answer:
-              type: object
-              properties:
-                id:
-                  type: integer
-                text:
-                  type: string
-    Comment:
-      type: object
-      properties:
-        id:
-          type: integer
-        creator:
-          $ref: '#/components/schemas/ReferenceLabel'
-        text:
-          type: string
-        createdDate:
-          type: string
-          format: date-time
-          example: '2019-05-23T15:32:00Z'
-        mentions:
-          type: object
-          properties:
-            users:
-              type: array
-              items:
-                $ref: '#/components/schemas/ReferenceLabel'
-            teams:
-              type: array
-              items:
-                $ref: '#/components/schemas/ReferenceLabel'
     LibraryEntryHistory:
       type: object
       properties:
@@ -1199,147 +1592,6 @@ components:
       example:
         id: 3
         name: Internal Operations
-    MergeVariableType:
-      type: string
-      enum:
-        - library
-        - project
-    MergeVariableLibrary:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-          maxLength: 64
-        value:
-          type: string
-          maxLength: 200
-        description:
-          type: string
-          maxLength: 100
-          nullable: true
-        type:
-          type: string
-          enum:
-            - library
-        createdDate:
-          type: string
-          format: date-time
-        lastUpdatedDate:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - value
-        - description
-        - type
-        - createdDate
-        - lastUpdatedDate
-    MergeVariableProject:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-          maxLength: 64
-        description:
-          type: string
-          maxLength: 100
-          nullable: true
-        type:
-          type: string
-          enum:
-            - project
-        createdDate:
-          type: string
-          format: date-time
-        lastUpdatedDate:
-          type: string
-          format: date-time
-      required:
-        - id
-        - name
-        - description
-        - type
-        - createdDate
-        - lastUpdatedDate
-    MergeVariable:
-      oneOf:
-        - title: Library Variable
-          allOf:
-            - $ref: '#/components/schemas/MergeVariableLibrary'
-        - title: Project Variable
-          allOf:
-            - $ref: '#/components/schemas/MergeVariableProject'
-    MergeVariableWide:
-      allOf:
-        - $ref: '#/components/schemas/MergeVariable'
-        - properties:
-            usages:
-              type: object
-              properties:
-                libraryEntries:
-                  description: Ids of Library Entries that use this Variable
-                  type: array
-                  items:
-                    type: integer
-              required:
-                - libraryEntries
-          required:
-            - usages
-    MergeVariableChange:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 64
-        value:
-          description: excluded if type is "project"
-          type: string
-          maxLength: 255
-          nullable: true
-        description:
-          type: string
-          maxLength: 100
-        type:
-          $ref: '#/components/schemas/MergeVariableType'
-        changeDate:
-          type: string
-          format: date-time
-      required:
-        - name
-        - description
-        - type
-        - changeDate
-    Tag:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Tag Id
-        name:
-          type: string
-          description: Tag name
-        createdByUserID:
-          type: integer
-          description: Id of User who created the Tag
-        createdDate:
-          type: string
-          format: date-time
-          description: Date of creation
-        lastUpdatedDate:
-          type: string
-          format: date-time
-          description: Date when the Tag was last updated
-      example:
-        id: 5
-        name: Canada
-        createdByUserID: 12345
-        createdDate: '2021-03-08T15:50:00Z'
-        lastUpdatedDate: '2021-03-09T10:35:00Z'
     ComplianceSet:
       type: object
       description: 'Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.'
@@ -1375,16 +1627,6 @@ components:
         - label
         - shortName
         - options
-    ComplianceOption:
-      type: object
-      description: 'Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.'
-      properties:
-        label:
-          type: string
-          minLength: 1
-          maxLength: 65535
-      required:
-        - label
     Project:
       type: object
       properties:
@@ -1396,13 +1638,13 @@ components:
           type: string
           nullable: true
           enum:
-            - RFP
-            - RFI
-            - DDQ
-            - SQ
-            - PP
-            - OTHER
-            - null
+            - "RFP"
+            - "RFI"
+            - "DDQ"
+            - "SQ"
+            - "PP"
+            - "OTHER"
+            - "null"
         status:
           type: string
           enum:
@@ -1427,77 +1669,6 @@ components:
           $ref: '#/components/schemas/ReferenceLabel'
         description:
           type: string
-    ProjectType:
-      type: string
-      enum:
-        - RFP
-        - RFI
-        - DDQ
-        - SQ
-        - PP
-        - OTHER
-    CreateProjectRequestBody:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 255
-          example: Project ABC
-        projectType:
-          $ref: '#/components/schemas/ProjectType'
-        description:
-          type: string
-          nullable: true
-        companyName:
-          type: string
-          maxLength: 255
-        dueDate:
-          type: string
-          format: date-time
-          example: '2020-06-08T15:39:04Z'
-          description: The input datetime will be converted to UTC and then pushed to end of day.
-        createdType:
-          type: string
-          enum:
-            - BLANK
-            - TEMPLATE
-            - COPY_OUTLINE
-            - CHROME_EXTENSION
-            - SALESFORCE
-            - MS_DYNAMICS
-            - MS_EXCEL_ADDIN
-        owner:
-          type: object
-          properties:
-            id:
-              type: integer
-          required:
-            - id
-          description: 'The owner of the Project. If not specified, the user creating the project will be the owner.'
-        customProjectFieldValues:
-          description: A value map for any Custom Project Fields. Missing fields will be set to null. Only fields with "project" as their information source can be set.
-          type: object
-          additionalProperties:
-            x-additionalPropertiesName: '{Custom Project Field name}'
-            type: string
-            nullable: true
-            maxLength: 100
-        mergeVariableValues:
-          description: A value map for any existing Project Merge Variables. Missing variables will be set to null.
-          type: object
-          additionalProperties:
-            x-additionalPropertiesName: '{Merge Variable name}'
-            type: string
-            maxLength: 128
-          default: {}
-          example:
-            Client Name: Acme Co.
-            Deal Size: $100000000000000
-      required:
-        - name
-        - companyName
-        - dueDate
-        - projectType
     EntryNoProjectId:
       type: object
       properties:
@@ -1616,27 +1787,6 @@ components:
         Opportunity Url: 'https://example.com/CRM/opportunity/abc123'
         Uninitialized field: null
         Amount: '1000'
-    CustomProjectFieldPatchValuesMap:
-      description: A map from Custom Project Field names to values for the patch endpoint request body
-      type: object
-      additionalProperties:
-        x-additionalPropertiesName: '{Custom Project Field name}'
-        type: string
-        maxLength: 100
-      example:
-        Opportunity Url: 'https://example.com/CRM/opportunity/abc123'
-        Amount: '1000'
-    MergeVariableProjectValuesMap:
-      description: A map from Merge Variable names to values
-      type: object
-      additionalProperties:
-        x-additionalPropertiesName: '{Merge Variable name | not ''Client Name''}'
-        type: string
-        nullable: true
-        maxLength: 128
-      example:
-        Deal Size: $100000000000000
-        Uninitialized variable: null
     ProjectSummary:
       type: object
       properties:
@@ -1686,13 +1836,13 @@ components:
           nullable: true
           description: Project Type
           enum:
-            - RFP
-            - RFI
-            - DDQ
-            - SQ
-            - PP
-            - OTHER
-            - null
+            - "RFP"
+            - "RFI"
+            - "DDQ"
+            - "SQ"
+            - "PP"
+            - "OTHER"
+            - "null"
         isComplete:
           type: boolean
           description: flag to indicate work is done
@@ -1777,15 +1927,17 @@ components:
             - COLLABORATOR
             - ASSIGNEE
           example: ADMIN
-    ProjectTemplate:
-      type: object
-      properties:
-        id:
-          type: integer
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: user@example.com
+          description: Email address when type=USER; null/omitted for TEAM.
         name:
           type: string
-        description:
-          type: string
+          example: John Doe
+          nullable: false
+          description: User’s full name when type=USER; team name when type=TEAM.
     CustomProjectFieldInputSource:
       type: string
       enum:
@@ -1919,56 +2071,6 @@ components:
         - title: Custom Project Field with MsDynamics input - IN DEVELOPMENT
           allOf:
             - $ref: '#/components/schemas/CustomMsDynamicsInputField'
-    CustomProjectFieldDropdownFieldType:
-      type: object
-      properties:
-        name:
-          type: string
-          maxLength: 40
-        instructions:
-          description: Instructions to the project owner about how this field is intended to be filled out
-          type: string
-          maxLength: 40
-        isRequired:
-          type: boolean
-          default: false
-        fieldType:
-          description: Default value is SHORT_TEXT if dropdownValues property is missing
-          type: string
-          default: DROPDOWN
-          enum:
-            - DROPDOWN
-        dropdownValues:
-          description: Empty values are not allowed. Any leading or trailing spaces will be trimmed.
-          type: array
-          items:
-            type: string
-          uniqueItems: true
-          minLength: 1
-      required:
-        - name
-        - dropdownValues
-    CustomProjectFieldShortTextFieldType:
-      type: object
-      description: 'This is the default schema, when fieldType is not passed'
-      properties:
-        name:
-          type: string
-          maxLength: 40
-        instructions:
-          description: Instructions to the project owner about how this field is intended to be filled out
-          type: string
-          maxLength: 40
-        isRequired:
-          type: boolean
-          default: false
-        fieldType:
-          type: string
-          default: SHORT_TEXT
-          enum:
-            - SHORT_TEXT
-      required:
-        - name
     UserOrTeamReference:
       type: object
       properties:
@@ -1984,6 +2086,12 @@ components:
         name:
           type: string
           example: name
+        email:
+          type: string
+          format: email
+          nullable: true
+          example: user@example.com
+          description: Email address when type=USER; null/omitted for TEAM.
     Entry:
       allOf:
         - $ref: '#/components/schemas/EntryNoProjectId'
@@ -2020,26 +2128,6 @@ components:
               $ref: '#/components/schemas/UserOrTeamReference'
       required:
         - project
-    EntryComplianceAnswerCollection:
-      description: |
-        If provided, the `complianceAnswers` object will replace the current Compliance Answers.
-
-        Project Compliance Sets are unique per project. Use the /projects/{projectId}/complianceSets
-        API to retrieve a list of available Compliance Sets.
-
-        The complianceSetId must match one of the Compliance Sets in the given Project, and option
-        must match one of the option labels in the given Compliance Set.
-
-        Note: we are making terminology updates in Loopio - Compliance Sets shall be referred to as Answer Sets. The API will be updated to reflect this change at a later time.
-      type: array
-      items:
-        type: object
-        properties:
-          complianceSetId:
-            type: integer
-          option:
-            type: string
-            nullable: true
     Section:
       type: object
       properties:
@@ -2084,235 +2172,6 @@ components:
         - project
         - section
         - name
-    Team:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Team Id
-        name:
-          type: string
-          description: Team name
-        description:
-          type: string
-          description: Description
-          nullable: true
-      example:
-        id: 3
-        name: Engineers
-        description: Employees in the Engineering Department
-    TeamUser:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Team Id
-        name:
-          type: string
-          description: Team name
-        description:
-          type: string
-          description: Description
-          nullable: true
-        users:
-          type: array
-          items:
-            $ref: '#/components/schemas/ReferenceLabel'
-      example:
-        id: 3
-        name: Engineers
-        description: Employees in the Engineering Department
-        users:
-          - id: 1
-            name: User 1
-          - id: 2
-            name: User 2
-    IdentifyingUserData:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: User Id
-          example: 111
-        customerId:
-          type: integer
-          description: Customer Id
-          example: 11
-        firstName:
-          type: string
-          description: User's first name
-          example: Jane
-        lastName:
-          type: string
-          description: User's last name
-          example: Doe
-        email:
-          type: string
-          description: User's email
-          example: jane.doe@example.com
-        customerName:
-          type: string
-          description: Name of the company to which the User belongs
-          example: Jane Doe Asset Management
-        subdomain:
-          type: string
-          description: User's Loopio customer subdomain
-          example: acmecorp
-        tier:
-          type: string
-          description: The Service Tier for the User's Loopio instance
-          example: Premium
-        activeTimezone:
-          type: string
-          description: The timezone Loopio associates with the User
-          example: America/New_York
-      required:
-        - id
-        - customerId
-        - firstName
-        - lastName
-        - email
-        - customerName
-        - subdomain
-        - tier
-        - activeTimezone
-    UserRole:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: Role Id
-        name:
-          type: string
-          description: Role name
-        roleType:
-          type: string
-          enum:
-            - Full Access
-            - Standard
-            - Library User
-            - Content Contributor
-            - Project Contributor
-            - Power User
-            - Lite User
-            - Guest User
-      example:
-        id: 3
-        name: Administrator
-        type: Full Access
-    UserStatus:
-      type: string
-      enum:
-        - ENABLED
-        - DISABLED
-        - PENDING
-        - LOCKED
-    User:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: User ID
-          example: 111
-        firstName:
-          type: string
-          description: User's first name
-          example: Jane
-        lastName:
-          type: string
-          description: User's last name
-          example: Doe
-        email:
-          type: string
-          description: User's email
-          example: jane.doe@example.com
-        status:
-          $ref: '#/components/schemas/UserStatus'
-        guid:
-          type: string
-          description: User's generated unique ID
-          example: 2e7a3fd2928111e3adb1a5bcbc7a2f7b
-        roleId:
-          type: integer
-          description: ID of the User's Role
-          example: 222
-    UserWithRoleAndTeams:
-      type: object
-      properties:
-        id:
-          type: integer
-          description: User ID
-          example: 111
-        firstName:
-          type: string
-          description: User's first name
-          example: Jane
-        lastName:
-          type: string
-          description: User's last name
-          example: Doe
-        email:
-          type: string
-          description: User's email
-          example: jane.doe@example.com
-        guid:
-          type: string
-          description: User's generated unique ID
-          example: 2e7a3fd2928111e3adb1a5bcbc7a2f7b
-        status:
-          $ref: '#/components/schemas/UserStatus'
-        roleId:
-          type: integer
-          description: ID of the User's Role
-          example: 100
-        teamIds:
-          type: array
-          items:
-            type: integer
-          description: A list of IDs for the Teams the User belongs to
-          example:
-            - 100
-            - 200
-    SubscribableEvent:
-      type: string
-      enum:
-        - libraryEntry.updated
-        - libraryReview.assigned
-        - project.statusChanged
-        - project.created
-    WebhookSubscription:
-      type: object
-      properties:
-        id:
-          type: integer
-        webhookUrl:
-          type: string
-          format: uri
-          pattern: '^https://'
-        events:
-          type: array
-          items:
-            $ref: '#/components/schemas/SubscribableEvent'
-          minItems: 1
-        status:
-          type: string
-          enum:
-            - PENDING
-            - ACTIVE
-            - DISABLED
-        creator:
-          type: object
-          properties:
-            id:
-              type: integer
-          required:
-            - id
-      required:
-        - id
-        - webhookUrl
-        - events
-        - status
-        - creator
   responses:
     '204':
       description: No Content
