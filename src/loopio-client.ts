@@ -29,9 +29,56 @@ import type {
 
 export class LoopioApiClient {
   private config: LoopioConfig;
+  private accessToken: string = "";
+  private tokenRefreshTimer?: NodeJS.Timeout;
 
   constructor(config: LoopioConfig) {
     this.config = config;
+  }
+
+  async fetchAccessToken(): Promise<void> {
+    const tokenUrl = "https://api.loopio.com/oauth2/access_token";
+    const params = new URLSearchParams();
+    params.append("grant_type", "client_credentials");
+    params.append("scope", "crm:read customProjectField:read file:read library:read project:read project.participant:read");
+    params.append("client_id", this.config.clientId);
+    params.append("client_secret", this.config.clientSecret);
+
+    try {
+      const response = await fetch(tokenUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch access token: ${response.status} ${response.statusText}`);
+      }
+
+      const data = await response.json() as { access_token: string };
+      this.accessToken = data.access_token;
+      console.error("[Loopio] Access token fetched successfully");
+    } catch (error) {
+      console.error("[Loopio] Error fetching access token:", error);
+      throw error;
+    }
+  }
+
+  startTokenRefresh(): void {
+    // Refresh token every 59 minutes (3540000 ms)
+    this.tokenRefreshTimer = setInterval(async () => {
+      console.error("[Loopio] Refreshing access token...");
+      await this.fetchAccessToken();
+    }, 59 * 60 * 1000);
+  }
+
+  stopTokenRefresh(): void {
+    if (this.tokenRefreshTimer) {
+      clearInterval(this.tokenRefreshTimer);
+      this.tokenRefreshTimer = undefined;
+    }
   }
 
   private async request<T>(
@@ -44,7 +91,7 @@ export class LoopioApiClient {
   ): Promise<T> {
     const url = `${this.config.apiBaseUrl}${endpoint}`;
     const headers = {
-      "Authorization": `Bearer ${this.config.accessToken}`,
+      "Authorization": `Bearer ${this.accessToken}`,
       "Content-Type": "application/json",
       ...options.headers,
     };

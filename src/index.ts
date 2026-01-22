@@ -1,13 +1,18 @@
+import { config } from "dotenv";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
 import { LoopioApiClient } from "./loopio-client.js";
 import type { LoopioConfig } from "./types.js";
 
+// Load environment variables from .env file
+config();
+
 // Configure Loopio API client
 const loopioConfig: LoopioConfig = {
   apiBaseUrl: process.env.LOOPIO_API_BASE_URL || "https://api.loopio.com/data/v2",
-  accessToken: process.env.LOOPIO_ACCESS_TOKEN || "",
+  clientId: process.env.LOOPIO_CLIENT_ID || "",
+  clientSecret: process.env.LOOPIO_CLIENT_SECRET || "",
 };
 
 const loopioClient = new LoopioApiClient(loopioConfig);
@@ -493,14 +498,24 @@ server.prompt(
 // ====================
 
 async function main() {
+  // Validate required environment variables
+  if (!loopioConfig.clientId || !loopioConfig.clientSecret) {
+    console.error("ERROR: LOOPIO_CLIENT_ID and LOOPIO_CLIENT_SECRET must be set!");
+    process.exit(1);
+  }
+
+  // Fetch initial access token
+  console.error("[Loopio] Fetching initial access token...");
+  await loopioClient.fetchAccessToken();
+
+  // Start automatic token refresh (every 59 minutes)
+  loopioClient.startTokenRefresh();
+
   const transport = new StdioServerTransport();
   await server.connect(transport);
   
   // Log to stderr (stdout is for MCP protocol)
   console.error("Loopio MCP Server (STDIO mode) started");
-  if (!loopioConfig.accessToken) {
-    console.error("WARNING: LOOPIO_ACCESS_TOKEN not set!");
-  }
 }
 
 main().catch((error) => {

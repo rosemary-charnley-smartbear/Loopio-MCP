@@ -72,16 +72,22 @@ This MCP server provides **26 read-only tools** for Loopio API access:
 ### Prerequisites
 - **Node.js** (version >= 18.0.0)
 - **npm** (comes with Node.js)
-- **Loopio API Access Token** (OAuth 2.0)
+- **Loopio OAuth 2.0 Client Credentials** (client_id and client_secret)
 
 ### Environment Variables
-The server uses the following environment variable:
+The server uses the following environment variables:
 
 ```bash
-LOOPIO_ACCESS_TOKEN=your_oauth_token_here  # Required
+LOOPIO_CLIENT_ID=your_client_id_here        # Required
+LOOPIO_CLIENT_SECRET=your_client_secret_here # Required
 ```
 
-Set this in your VS Code MCP configuration (`.vscode/mcp.json`) or system environment.
+Create a `.env` file in the project root (see `.env.example`):
+
+```bash
+cp .env.example .env
+# Edit .env with your credentials
+```
 
 ### Installation Steps
 1. Navigate to the project directory:
@@ -109,25 +115,37 @@ The server is configured for VS Code MCP integration in [.vscode/mcp.json](.vsco
     "loopio": {
       "command": "node",
       "args": ["--loader", "ts-node/esm", "src/index.ts"],
-      "cwd": "C:\\Users\\<user>\\Documents\\GitHub\\Loopio-MCP",
-      "env": {
-        "LOOPIO_ACCESS_TOKEN": "<your_oauth_token_here>"
-      }
+      "cwd": "C:\\Users\\<user>\\Documents\\GitHub\\Loopio-MCP"
     }
   }
 }
 ```
 
+Credentials are loaded from the `.env` file in the project root.
+
 After installation:
-1. Update your access token in `.vscode/mcp.json`
+1. Create a `.env` file with your client credentials (see `.env.example`)
 2. Reload VS Code (Ctrl+Shift+P → "Developer: Reload Window")
-3. The Loopio MCP server will be available to GitHub Copilot
+3. The Loopio MCP server will automatically fetch and refresh OAuth tokens every 59 minutes
+4. The server will be available to GitHub Copilot
 
 ## API Authentication
 
-This server requires a Loopio OAuth 2.0 access token. To obtain one:
+This server uses OAuth 2.0 client credentials flow to automatically fetch and refresh access tokens.
 
-### Get API Token:
+### Automatic Token Management:
+- **On Startup**: Fetches initial access token using client credentials
+- **Auto-Refresh**: Automatically refreshes the token every 59 minutes
+- **No Manual Token Updates**: You never need to manually update access tokens
+
+### Get OAuth Client Credentials:
+
+1. Register an OAuth application in your Loopio instance
+2. Request the following scopes: `crm:read customProjectField:read file:read library:read project:read project.participant:read`
+3. Obtain your `client_id` and `client_secret`
+4. Add these credentials to your `.env` file
+
+The server will handle all token fetching and refreshing automatically using this OAuth 2.0 flow:
 
 ```bash
 curl --location 'https://api.loopio.com/oauth2/access_token' \
@@ -137,13 +155,6 @@ curl --location 'https://api.loopio.com/oauth2/access_token' \
 --data-urlencode 'client_id=<client_id>' \
 --data-urlencode 'client_secret=<client_secret>'
 ```
-
-### Setup Steps:
-
-1. Register an OAuth application in your Loopio instance
-2. Request the following scopes: `crm:read customProjectField:read file:read library:read project:read project.participant:read`
-3. Complete the OAuth flow to obtain an access token
-4. Set the token in `.vscode/mcp.json`
 
 ## Usage Examples
 
