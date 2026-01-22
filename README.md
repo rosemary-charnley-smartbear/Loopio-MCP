@@ -75,19 +75,16 @@ This MCP server provides **26 read-only tools** for Loopio API access:
 - **Loopio OAuth 2.0 Client Credentials** (client_id and client_secret)
 
 ### Environment Variables
-The server uses the following environment variables:
+The server uses the following environment variables from a `.env.sales-representative` file:
 
 ```bash
 LOOPIO_CLIENT_ID=your_client_id_here        # Required
 LOOPIO_CLIENT_SECRET=your_client_secret_here # Required
 ```
 
-Create a `.env` file in the project root (see `.env.example`):
-
-```bash
-cp .env.example .env
-# Edit .env with your credentials
-```
+Create a `.env.sales-representative` file in the project root with your OAuth client credentials. The server will automatically:
+- Fetch an access token on startup using these credentials
+- Refresh the token every 59 minutes to maintain authentication
 
 ### Installation Steps
 1. Navigate to the project directory:
@@ -121,10 +118,10 @@ The server is configured for VS Code MCP integration in [.vscode/mcp.json](.vsco
 }
 ```
 
-Credentials are loaded from the `.env` file in the project root.
+Credentials are loaded from the `.env.sales-representative` file in the project root.
 
 After installation:
-1. Create a `.env` file with your client credentials (see `.env.example`)
+1. Create a `.env.sales-representative` file with your OAuth client credentials (see Environment Variables section)
 2. Reload VS Code (Ctrl+Shift+P → "Developer: Reload Window")
 3. The Loopio MCP server will automatically fetch and refresh OAuth tokens every 59 minutes
 4. The server will be available to GitHub Copilot
@@ -143,7 +140,7 @@ This server uses OAuth 2.0 client credentials flow to automatically fetch and re
 1. Register an OAuth application in your Loopio instance
 2. Request the following scopes: `crm:read customProjectField:read file:read library:read project:read project.participant:read`
 3. Obtain your `client_id` and `client_secret`
-4. Add these credentials to your `.env` file
+4. Add these credentials to your `.env.sales-representative` file
 
 The server will handle all token fetching and refreshing automatically using this OAuth 2.0 flow:
 
@@ -215,13 +212,14 @@ Based on the Loopio Public API v2 OpenAPI Specification:
 2. Reload VS Code window
 3. Check VS Code output panel for MCP errors
 
-### "LOOPIO_ACCESS_TOKEN not set" Warning
-Update the token in `.vscode/mcp.json` with your valid OAuth token.
+### "Client credentials not found" Error
+Ensure `.env.sales-representative` file exists in the project root with `LOOPIO_CLIENT_ID` and `LOOPIO_CLIENT_SECRET` set.
 
 ### Connection Errors
-- Verify your access token is valid and not expired
+- Verify your client credentials are correct in `.env.sales-representative`
 - Check that the Loopio API base URL is correct
-- Ensure you have the required OAuth scopes
+- Ensure your OAuth application has the required scopes
+- Token refresh happens automatically every 59 minutes - no manual intervention needed
 
 ### Tool Errors
 - Check the Loopio API documentation for required parameters

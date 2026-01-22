@@ -5,8 +5,8 @@ import { z } from "zod";
 import { LoopioApiClient } from "./loopio-client.js";
 import type { LoopioConfig } from "./types.js";
 
-// Load environment variables from .env file
-config();
+// Load environment variables from .env.sales-representative file
+config({ path: ".env.sales-representative" });
 
 // Configure Loopio API client
 const loopioConfig: LoopioConfig = {
