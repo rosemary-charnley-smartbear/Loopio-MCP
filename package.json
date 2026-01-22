@@ -25,6 +25,7 @@
   ],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.11.4",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
     "node-fetch": "^3.3.2",
     "zod": "^3.22.4"

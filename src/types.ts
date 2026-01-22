@@ -2,7 +2,8 @@
 
 export interface LoopioConfig {
   apiBaseUrl: string;
-  accessToken: string;
+  clientId: string;
+  clientSecret: string;
 }
 
 export interface ReferenceLabel {
