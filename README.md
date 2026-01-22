@@ -1,10 +1,10 @@
 # Loopio MCP Server (STDIO) - Sales Representative Edition
 
-This is a Model Context Protocol (MCP) server that provides read-only access to the Loopio Public API v2 via STDIO transport. It exposes **24 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, and file viewing - designed specifically for sales representatives. It integrates with VS Code and GitHub Copilot, enabling AI-powered read access to your Loopio workspace.
+This is a Model Context Protocol (MCP) server that provides read-only access to the Loopio Public API v2 via STDIO transport. It exposes **26 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, and file viewing - designed specifically for sales representatives. It integrates with VS Code and GitHub Copilot, enabling AI-powered read access to your Loopio workspace.
 
 ## Features
 
-This MCP server provides **24 read-only tools** for Loopio API access:
+This MCP server provides **26 read-only tools** for Loopio API access:
 
 ### Customer Tools (2)
 - **getCustomerActiveLanguages** - Get all languages in use in a customer's library entries
@@ -39,9 +39,6 @@ This MCP server provides **24 read-only tools** for Loopio API access:
 - **listCustomProjectFields** - List custom project fields
 - **getCustomProjectField** - Get a specific custom field
 - **getCustomProjectFieldValuesForProject** - Get custom field values for a project
-- **deleteCustomProjectField** - Delete a custom field
-- **getCustomProjectFieldValuesForProject** - Get custom field values for a project
-- **setCustomProjectFieldValuesForProject** - Set custom field values for a project
 
 ### Project Entries (2)
 - **listProjectEntries** - List entries in a project
@@ -136,7 +133,7 @@ This server requires a Loopio OAuth 2.0 access token. To obtain one:
 curl --location 'https://api.loopio.com/oauth2/access_token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
 --data-urlencode 'grant_type=client_credentials' \
---data-urlencode 'scope=file:read file:delete library:read library:write library:delete project:read project:write project:delete project.participant:read project.participant:write' \
+--data-urlencode 'scope=crm:read customProjectField:read file:read library:read project:read project.participant:read' \
 --data-urlencode 'client_id=<client_id>' \
 --data-urlencode 'client_secret=<client_secret>'
 ```
@@ -144,11 +141,7 @@ curl --location 'https://api.loopio.com/oauth2/access_token' \
 ### Setup Steps:
 
 1. Register an OAuth application in your Loopio instance
-2. Request the following scopes:
-   - `file:read`, `file:delete`
-   - `library:read`, `library:write`, `library:delete`
-   - `project:read`, `project:write`, `project:delete`
-   - `project.participant:read`, `project.participant:write`
+2. Request the following scopes: `crm:read customProjectField:read file:read library:read project:read project.participant:read`
 3. Complete the OAuth flow to obtain an access token
 4. Set the token in `.vscode/mcp.json`
 
@@ -202,7 +195,7 @@ npm start
 Based on the Loopio Public API v2 OpenAPI Specification:
 - Base URL: `https://api.loopio.com/data/v2`
 - Authentication: OAuth 2.0 Bearer Token
-- Documentation: See attached `loopio-api.yaml` for full API specification
+- Documentation: See attached `loopio-apis-scoped-SALES-REPRESENTATIVE.yaml` for full API specification
 
 ## Troubleshooting
 
