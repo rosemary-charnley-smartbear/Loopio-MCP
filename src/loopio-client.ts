@@ -40,7 +40,7 @@ export class LoopioApiClient {
     const tokenUrl = "https://api.loopio.com/oauth2/access_token";
     const params = new URLSearchParams();
     params.append("grant_type", "client_credentials");
-    params.append("scope", "crm:read customProjectField:read file:read library:read project:read project.participant:read");
+    params.append("scope", "file:read file:delete library:read library:write library:delete project:read project:write project:delete project.participant:read project.participant:write");
     params.append("client_id", this.config.clientId);
     params.append("client_secret", this.config.clientSecret);
 
