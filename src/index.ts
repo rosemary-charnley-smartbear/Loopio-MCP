@@ -500,7 +500,7 @@ server.prompt(
 async function main() {
   // Validate required environment variables
   if (!loopioConfig.clientId || !loopioConfig.clientSecret) {
-    console.error("ERROR: LOOPIO_CLIENT_ID and LOOPIO_CLIENT_SECRET must be set!");
+    console.error("ERROR: LOOPIO_CLIENT_ID and LOOPIO_CLIENT_SECRET must be set in .env.sales-representative file!");
     process.exit(1);
   }
 
