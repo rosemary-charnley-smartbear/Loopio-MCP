@@ -19,10 +19,15 @@ COPY --from=builder /app/package-lock.json /app/package-lock.json
 
 ENV NODE_ENV=production
 ENV NODE_TLS_REJECT_UNAUTHORIZED=0
+ENV MCP_TRANSPORT=sse
+ENV PORT=3000
 
 WORKDIR /app
 
 RUN npm config set strict-ssl false && npm install --ignore-scripts --omit-dev
+
+# Expose SSE server port
+EXPOSE 3000
 
 LABEL org.opencontainers.image.source="https://github.com/rosemary-charnley-smartbear/Loopio-MCP/tree/sales-deployment"
 LABEL org.opencontainers.image.description="Loopio MCP Server for Sales Representatives"

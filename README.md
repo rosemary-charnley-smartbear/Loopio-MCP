@@ -1,6 +1,21 @@
-# Loopio MCP Server (STDIO) - Sales Representative Edition
+# Loopio MCP Server - Sales Representative Edition
 
-This is a Model Context Protocol (MCP) server that provides read-only access to the Loopio Public API v2 via STDIO transport. It exposes **26 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, and file viewing - designed specifically for sales representatives. It integrates with VS Code and GitHub Copilot, enabling AI-powered read access to your Loopio workspace.
+This is a Model Context Protocol (MCP) server that provides read-only access to the Loopio Public API v2. It supports both **STDIO transport** (for local development) and **SSE transport** (for cloud deployment). It exposes **26 tools** covering library entries, projects, compliance sets, custom fields, participants, sections, and file viewing - designed specifically for sales representatives.
+
+## Transport Modes
+
+### STDIO Mode (Local Development)
+Default mode for local Claude Desktop integration. Communicates via standard input/output.
+
+### SSE Mode (Cloud Deployment)  
+HTTP-based Server-Sent Events transport for shared cloud deployment. Perfect for AWS, Azure, or any container platform.
+
+**SSE Endpoints:**
+- `GET /sse` - MCP SSE endpoint for clients
+- `POST /message` - Client message endpoint  
+- `GET /health` - Health check endpoint
+
+**Enable SSE mode by setting:** `MCP_TRANSPORT=sse` or `PORT=3000`
 
 ## Features
 
@@ -225,6 +240,51 @@ Ensure `.env.sales-representative` file exists in the project root with `LOOPIO_
 - Check the Loopio API documentation for required parameters
 - Verify stack IDs, category IDs exist in your Loopio instance
 - Ensure your access token has the necessary permissions
+
+## Deployment
+
+### Docker (Local Testing)
+
+```bash
+# Build the image
+docker build -t loopio-mcp-server .
+
+# Run in STDIO mode
+docker run -it --env-file .env.sales-representative loopio-mcp-server
+
+# Run in SSE mode
+docker run -p 3000:3000 --env-file .env.sales-representative \
+  -e MCP_TRANSPORT=sse loopio-mcp-server
+```
+
+### AWS Deployment
+
+See [aws-deploy.md](aws-deploy.md) for complete AWS deployment instructions using:
+- **AWS ECS Fargate** (recommended for production)
+- **AWS App Runner** (simpler, managed option)
+
+Quick deploy script:
+```bash
+chmod +x deploy-to-aws.sh
+./deploy-to-aws.sh
+```
+
+### Connecting MCP Clients to SSE Server
+
+Once deployed, configure your MCP client with the SSE endpoint:
+
+**Claude Desktop** (`claude_desktop_config.json`):
+```json
+{
+  "mcpServers": {
+    "loopio": {
+      "url": "https://your-server-domain.com/sse"
+    }
+  }
+}
+```
+
+**No authentication required** - the server is configured for open access. Add authentication middleware if needed for your use case.
 
 ## Server customization
 

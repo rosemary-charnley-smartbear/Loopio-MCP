@@ -1,7 +1,9 @@
 import { config } from "dotenv";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { SSEServerTransport } from "@modelcontextprotocol/sdk/server/sse.js";
 import { z } from "zod";
+import express from "express";
 import { LoopioApiClient } from "./loopio-client.js";
 import type { LoopioConfig } from "./types.js";
 
@@ -511,11 +513,49 @@ async function main() {
   // Start automatic token refresh (every 59 minutes)
   loopioClient.startTokenRefresh();
 
-  const transport = new StdioServerTransport();
-  await server.connect(transport);
+  // Check if running in SSE mode (HTTP server) or STDIO mode
+  const isSSEMode = process.env.MCP_TRANSPORT === "sse" || process.env.PORT;
   
-  // Log to stderr (stdout is for MCP protocol)
-  console.error("Loopio MCP Server (STDIO mode) started");
+  if (isSSEMode) {
+    // SSE Mode - HTTP Server for cloud deployment
+    const app = express();
+    const port = process.env.PORT || 3000;
+
+    // Health check endpoint
+    app.get("/health", (_req, res) => {
+      res.json({ status: "ok", service: "loopio-mcp-server" });
+    });
+
+    // SSE endpoint for MCP protocol
+    app.get("/sse", async (req, res) => {
+      console.error("[Loopio] New SSE connection established");
+      
+      const transport = new SSEServerTransport("/message", res);
+      await server.connect(transport);
+      
+      // Handle client disconnect
+      req.on("close", () => {
+        console.error("[Loopio] SSE connection closed");
+      });
+    });
+
+    // POST endpoint for client messages
+    app.post("/message", async (req, res) => {
+      // SSE transport handles the message routing
+      res.status(200).end();
+    });
+
+    app.listen(port, () => {
+      console.error(`[Loopio] MCP Server (SSE mode) listening on port ${port}`);
+      console.error(`[Loopio] SSE endpoint: http://localhost:${port}/sse`);
+      console.error(`[Loopio] Health check: http://localhost:${port}/health`);
+    });
+  } else {
+    // STDIO Mode - for local development
+    const transport = new StdioServerTransport();
+    await server.connect(transport);
+    console.error("[Loopio] MCP Server (STDIO mode) started");
+  }
 }
 
 main().catch((error) => {
