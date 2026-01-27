@@ -15,6 +15,9 @@ npm install && npm run build
 
 # Test SSE mode (Windows)
 .\test-sse.ps1
+
+# Test SSE mode (Linux/Mac)
+./test-sse.sh
 ```
 
 ## 🐳 Docker Quick Test

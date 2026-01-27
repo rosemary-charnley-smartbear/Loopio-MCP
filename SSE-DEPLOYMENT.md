@@ -43,6 +43,9 @@ npm start
 ```bash
 # PowerShell (Windows)
 .\test-sse.ps1
+
+# Bash (Linux/Mac)
+./test-sse.sh
 ```
 
 ### Docker Local Testing
@@ -110,8 +113,9 @@ The server automatically selects the transport mode:
 ## 📁 New Files Created
 
 1. `test-sse.ps1` - Windows test script
-2. `SSE-DEPLOYMENT.md` - This summary
-3. `Dockerfile` - Updated with SSE support
+2. `test-sse.sh` - Linux/Mac test script
+3. `SSE-DEPLOYMENT.md` - This summary
+4. `Dockerfile` - Updated with SSE support
 
 ## 🔄 Next Steps
 
