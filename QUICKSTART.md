@@ -1,24 +1,11 @@
 # Quick Start Guide - SSE Deployment
 
-## 🎯 60-Second Deployment
+## 🎯 Quick Setup
 
 ### Prerequisites
 ✅ Docker installed  
-✅ AWS CLI configured  
+✅ Node.js 18+ installed  
 ✅ Loopio API credentials
-
-### Deploy to AWS in 3 Commands
-
-```bash
-# 1. Clone/navigate to repo
-cd Loopio-MCP
-
-# 2. Run deployment script
-chmod +x deploy-to-aws.sh
-./deploy-to-aws.sh
-
-# 3. Done! Your MCP server is live
-```
 
 ## 🧪 Test Locally First
 
@@ -28,9 +15,6 @@ npm install && npm run build
 
 # Test SSE mode (Windows)
 .\test-sse.ps1
-
-# Test SSE mode (Linux/Mac)
-./test-sse.sh
 ```
 
 ## 🐳 Docker Quick Test
@@ -60,8 +44,8 @@ docker run -p 3000:3000 \
 ## 📚 Full Documentation
 
 - **SSE Setup**: See `SSE-DEPLOYMENT.md`
-- **AWS Deploy**: See `aws-deploy.md`
 - **API Details**: See `README.md`
+- **Architecture**: See `ARCHITECTURE.md`
 
 ## ⚡ Environment Variables
 
@@ -89,14 +73,10 @@ PORT=3000
 - Verify Loopio credentials are valid
 
 **Can't connect from client?**
-- Check firewall/security groups allow port 3000
+- Check firewall allows port 3000
 - Verify SSE endpoint URL is correct
-
-**AWS deployment fails?**
-- Update `task-definition.json` with your account ID
-- Ensure AWS credentials are configured
-- Check ECR repository exists
+- Test with `/health` endpoint first
 
 ---
 
-**Need help?** See full docs in `SSE-DEPLOYMENT.md` and `aws-deploy.md`
+**Need help?** See full docs in `SSE-DEPLOYMENT.md`

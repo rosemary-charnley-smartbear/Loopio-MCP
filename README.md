@@ -257,18 +257,6 @@ docker run -p 3000:3000 --env-file .env.sales-representative \
   -e MCP_TRANSPORT=sse loopio-mcp-server
 ```
 
-### AWS Deployment
-
-See [aws-deploy.md](aws-deploy.md) for complete AWS deployment instructions using:
-- **AWS ECS Fargate** (recommended for production)
-- **AWS App Runner** (simpler, managed option)
-
-Quick deploy script:
-```bash
-chmod +x deploy-to-aws.sh
-./deploy-to-aws.sh
-```
-
 ### Connecting MCP Clients to SSE Server
 
 Once deployed, configure your MCP client with the SSE endpoint:

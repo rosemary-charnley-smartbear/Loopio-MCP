@@ -21,14 +21,7 @@ Your Loopio MCP Server has been successfully converted to support **Server-Sent 
 - Maintained existing SSL workarounds for corporate environments
 - Multi-stage build for optimized image size
 
-### 3. **AWS Deployment Files**
-- **aws-deploy.md** - Complete deployment guide for:
-  - AWS ECS Fargate (recommended for production)
-  - AWS App Runner (simpler managed option)
-- **task-definition.json** - ECS Fargate task configuration
-- **deploy-to-aws.sh** - Automated deployment script
-
-### 4. **Testing Scripts**
+### 3. **Testing Scripts**
 - **test-sse.ps1** - PowerShell test script for Windows
 - **test-sse.sh** - Bash test script for Linux/Mac
 
@@ -50,9 +43,6 @@ npm start
 ```bash
 # PowerShell (Windows)
 .\test-sse.ps1
-
-# Bash (Linux/Mac)
-./test-sse.sh
 ```
 
 ### Docker Local Testing
@@ -70,15 +60,6 @@ docker run -p 3000:3000 \
 curl http://localhost:3000/health
 ```
 
-### AWS Deployment
-```bash
-# Quick deploy
-chmod +x deploy-to-aws.sh
-./deploy-to-aws.sh
-
-# Manual deployment - see aws-deploy.md for details
-```
-
 ## 🔗 Client Connection
 
 ### Claude Desktop
@@ -87,7 +68,7 @@ Update `claude_desktop_config.json`:
 {
   "mcpServers": {
     "loopio": {
-      "url": "https://your-aws-domain.com/sse"
+      "url": "https://your-server-domain.com/sse"
     }
   }
 }
@@ -107,11 +88,10 @@ const client = new MCPClient({
 As requested, **no authentication is required** to access the MCP server. The server is configured for open access.
 
 **Recommendations for production:**
-- Add API Gateway with rate limiting
-- Use AWS WAF for DDoS protection
+- Add rate limiting middleware
 - Implement IP whitelisting if needed
-- Monitor usage with CloudWatch
-- Set up budget alerts
+- Monitor usage and set up logging
+- Consider adding authentication for production use
 
 ## 📊 Transport Mode Detection
 
@@ -129,25 +109,19 @@ The server automatically selects the transport mode:
 
 ## 📁 New Files Created
 
-1. `aws-deploy.md` - AWS deployment documentation
-2. `task-definition.json` - ECS task configuration
-3. `deploy-to-aws.sh` - Automated deployment script
-4. `test-sse.ps1` - Windows test script
-5. `test-sse.sh` - Linux/Mac test script
-6. `SSE-DEPLOYMENT.md` - This summary
+1. `test-sse.ps1` - Windows test script
+2. `SSE-DEPLOYMENT.md` - This summary
+3. `Dockerfile` - Updated with SSE support
 
 ## 🔄 Next Steps
 
 1. **Test locally** with Docker: `docker build -t loopio-mcp-server . && docker run -p 3000:3000 --env-file .env.sales-representative -e MCP_TRANSPORT=sse loopio-mcp-server`
 
-2. **Deploy to AWS**:
-   - Update `task-definition.json` with your AWS account ID
-   - Store Loopio credentials in AWS Secrets Manager
-   - Run `./deploy-to-aws.sh` or follow `aws-deploy.md`
+2. **Deploy** to your preferred cloud platform or hosting service
 
 3. **Connect clients** to your deployed SSE endpoint
 
-4. **Monitor** with CloudWatch logs and metrics
+4. **Monitor** with your preferred logging and monitoring tools
 
 ## 💡 Environment Variables
 
@@ -168,4 +142,3 @@ Optional:
 For issues or questions about:
 - **MCP Protocol**: https://modelcontextprotocol.io/
 - **Loopio API**: https://api.loopio.com/
-- **AWS Deployment**: See `aws-deploy.md`
