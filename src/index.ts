@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { config } from "dotenv";
 import { McpServer, ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
@@ -5,8 +6,10 @@ import { z } from "zod";
 import { LoopioApiClient } from "./loopio-client.js";
 import type { LoopioConfig } from "./types.js";
 
-// Load environment variables from .env.rfp file
-config({ path: ".env.rfp" });
+// Load environment variables from .env.rfp file or DOTENV_PATH
+const envPath = process.env.DOTENV_PATH || ".env.rfp";
+config({ path: envPath });
+
 
 // Configure Loopio API client
 const loopioConfig: LoopioConfig = {
@@ -48,6 +51,7 @@ server.resource(
 
 server.tool(
   "listLibraryEntries",
+  "Retrieve a paginated list of library entries with optional filtering by search query, language, date, tags, and attachment presence",
   {
     page: z.number().optional().describe("Page number (default: 1)"),
     pageSize: z.number().min(1).max(200).optional().describe("Number of items per page (default: 10, max: 200)"),
@@ -74,6 +78,7 @@ server.tool(
 
 server.tool(
   "getLibraryEntry",
+  "Retrieve detailed information about a specific library entry by ID with optional merge variable substitution",
   {
     libraryEntryId: z.number().describe("Library Entry ID"),
     inlineMergeVariables: z.boolean().optional().describe("Substitute merge variable placeholders")
@@ -89,6 +94,7 @@ server.tool(
 
 server.tool(
   "createLibraryEntry",
+  "Create a new library entry with questions, answers, location (stack/category/subcategory), language, and tags",
   {
     questions: z.array(z.object({ text: z.string().describe("Question text") })).min(1).describe("Array of questions for this entry"),
     answerText: z.string().nullable().describe("Answer text (can be null if using compliance answers)"),
@@ -118,6 +124,7 @@ server.tool(
 
 server.tool(
   "updateLibraryEntry",
+  "Update an existing library entry using JSON Patch operations to modify specific fields like answer text, questions, or tags",
   {
     libraryEntryId: z.number().describe("Library Entry ID to update"),
     operations: z.array(z.object({
@@ -137,6 +144,7 @@ server.tool(
 
 server.tool(
   "deleteLibraryEntry",
+  "Permanently delete a library entry by ID",
   { libraryEntryId: z.number().describe("Library Entry ID to delete") },
   async ({ libraryEntryId }) => {
     await loopioClient.deleteLibraryEntry(libraryEntryId);
@@ -148,6 +156,7 @@ server.tool(
 
 server.tool(
   "getLibraryEntryAttachments",
+  "Retrieve all file attachments associated with a specific library entry",
   { libraryEntryId: z.number().describe("Library Entry ID") },
   async ({ libraryEntryId }) => {
     const attachments = await loopioClient.getLibraryEntryAttachments(libraryEntryId);
@@ -159,6 +168,7 @@ server.tool(
 
 server.tool(
   "getLibraryEntryHistory",
+  "Retrieve the revision history for a library entry showing all changes made over time",
   {
     libraryEntryId: z.number().describe("Library Entry ID"),
     page: z.number().optional().describe("Page number"),
@@ -174,6 +184,7 @@ server.tool(
 
 server.tool(
   "getLibraryEntryHistoryItem",
+  "Retrieve a specific historical revision of a library entry by history ID",
   {
     libraryEntryId: z.number().describe("Library Entry ID"),
     historyId: z.number().describe("History Item ID")
@@ -188,6 +199,7 @@ server.tool(
 
 server.tool(
   "bulkCreateLibraryEntries",
+  "Create multiple library entries in a single batch operation, returns a task ID for tracking the async operation",
   {
     entries: z.array(z.object({
       questions: z.array(z.object({ text: z.string() })).min(1),
@@ -224,6 +236,7 @@ server.tool(
 
 server.tool(
   "listStacks",
+  "List all library stacks (organizational containers for library entries) with optional field expansion",
   {
     fields: z.string().optional().describe("Fields to include (e.g., '@wide' for full structure)")
   },
@@ -241,6 +254,7 @@ server.tool(
 
 server.tool(
   "showFile",
+  "Retrieve metadata and information about a specific file by ID",
   { fileId: z.number().describe("File ID") },
   async ({ fileId }) => {
     const file = await loopioClient.showFile(fileId);
@@ -252,6 +266,7 @@ server.tool(
 
 server.tool(
   "deleteFile",
+  "Permanently delete a file by ID",
   { fileId: z.number().describe("File ID to delete") },
   async ({ fileId }) => {
     await loopioClient.deleteFile(fileId);
@@ -267,6 +282,7 @@ server.tool(
 
 server.tool(
   "listProjects",
+  "Retrieve a paginated list of projects with optional filtering by project type (RFP, RFI, etc.) and owner",
   {
     page: z.number().optional().describe("Page number"),
     pageSize: z.number().optional().describe("Items per page"),
@@ -283,6 +299,7 @@ server.tool(
 
 server.tool(
   "getProject",
+  "Retrieve detailed information about a specific project by ID with optional field selection",
   {
     projectId: z.number().describe("Project ID"),
     fields: z.string().optional().describe("Fields to include in response")
@@ -297,6 +314,7 @@ server.tool(
 
 server.tool(
   "createProject",
+  "Create a new project with name, type, company, due date, and optional custom fields and merge variables",
   {
     name: z.string().describe("Project name"),
     projectType: z.enum(["RFP", "RFI", "DDQ", "SQ", "PP", "OTHER"]).describe("Project type"),
@@ -326,6 +344,7 @@ server.tool(
 
 server.tool(
   "updateProject",
+  "Update a project's status or other properties",
   {
     projectId: z.number().describe("Project ID"),
     status: z.string().describe("New project status")
@@ -340,6 +359,7 @@ server.tool(
 
 server.tool(
   "deleteProject",
+  "Permanently delete a project by ID",
   { projectId: z.number().describe("Project ID to delete") },
   async ({ projectId }) => {
     await loopioClient.deleteProject(projectId);
@@ -351,6 +371,7 @@ server.tool(
 
 server.tool(
   "getProjectSummary",
+  "Retrieve a summary overview of a project including key metrics and status",
   { projectId: z.number().describe("Project ID") },
   async ({ projectId }) => {
     const summary = await loopioClient.getProjectSummary(projectId);
@@ -362,6 +383,7 @@ server.tool(
 
 server.tool(
   "getProjectSummaryList",
+  "Retrieve a list of project summaries for projects updated after a specified date",
   { lastUpdatedDateGt: z.string().describe("Get projects updated after this date (ISO 8601)") },
   async ({ lastUpdatedDateGt }) => {
     const summaries = await loopioClient.getProjectSummaryList(lastUpdatedDateGt);
@@ -377,6 +399,7 @@ server.tool(
 
 server.tool(
   "getProjectComplianceSets",
+  "Retrieve all compliance/answer sets configured for a project",
   { projectId: z.number().describe("Project ID") },
   async ({ projectId }) => {
     const sets = await loopioClient.getProjectComplianceSets(projectId);
@@ -388,6 +411,7 @@ server.tool(
 
 server.tool(
   "getProjectComplianceSet",
+  "Retrieve details of a specific compliance/answer set for a project",
   {
     projectId: z.number().describe("Project ID"),
     complianceSetId: z.number().describe("Compliance Set ID")
@@ -402,6 +426,7 @@ server.tool(
 
 server.tool(
   "createComplianceSet",
+  "Create a new compliance/answer set for a project with custom options",
   {
     projectId: z.number().describe("Project ID"),
     label: z.string().describe("Compliance set label"),
@@ -418,6 +443,7 @@ server.tool(
 
 server.tool(
   "updateProjectComplianceSet",
+  "Update an existing compliance/answer set's label, short name, or options",
   {
     projectId: z.number().describe("Project ID"),
     complianceSetId: z.number().describe("Compliance Set ID"),
@@ -435,6 +461,7 @@ server.tool(
 
 server.tool(
   "deleteProjectComplianceSet",
+  "Permanently delete a compliance/answer set from a project",
   {
     projectId: z.number().describe("Project ID"),
     complianceSetId: z.number().describe("Compliance Set ID to delete")
@@ -453,6 +480,7 @@ server.tool(
 
 server.tool(
   "getProjectParticipants",
+  "Retrieve all participants (users and teams) assigned to a project with their roles",
   { projectId: z.number().describe("Project ID") },
   async ({ projectId }) => {
     const participants = await loopioClient.getProjectParticipants(projectId);
@@ -464,6 +492,7 @@ server.tool(
 
 server.tool(
   "updateProjectParticipants",
+  "Add, remove, or update participants and their roles (ADMIN, CONTRIBUTOR, REVIEWER) on a project",
   {
     projectId: z.number().describe("Project ID"),
     participants: z.array(z.object({
@@ -486,6 +515,7 @@ server.tool(
 
 server.tool(
   "listProjectSourceDocuments",
+  "Retrieve all source documents (RFP files, questionnaires, etc.) attached to a project",
   { projectId: z.number().describe("Project ID") },
   async ({ projectId }) => {
     const documents = await loopioClient.listProjectSourceDocuments(projectId);
@@ -501,6 +531,7 @@ server.tool(
 
 server.tool(
   "getCustomProjectFieldValuesForProject",
+  "Retrieve all custom field values set for a specific project",
   { projectId: z.number().describe("Project ID") },
   async ({ projectId }) => {
     const values = await loopioClient.getCustomProjectFieldValuesForProject(projectId);
@@ -512,6 +543,7 @@ server.tool(
 
 server.tool(
   "setCustomProjectFieldValuesForProject",
+  "Set or update custom field values for a project using key-value pairs",
   {
     projectId: z.number().describe("Project ID"),
     values: z.record(z.string()).describe("Custom field values (key-value pairs)")
@@ -526,6 +558,7 @@ server.tool(
 
 server.tool(
   "listCustomProjectFields",
+  "List all custom project field definitions with optional filtering by source system",
   { source: z.string().optional().describe("Filter by source (project, salesforce, msDynamics)") },
   async ({ source }) => {
     const fields = await loopioClient.listCustomProjectFields(source);
@@ -537,6 +570,7 @@ server.tool(
 
 server.tool(
   "getCustomProjectField",
+  "Retrieve detailed information about a specific custom project field definition",
   { id: z.number().describe("Custom Project Field ID") },
   async ({ id }) => {
     const field = await loopioClient.getCustomProjectField(id);
@@ -548,6 +582,7 @@ server.tool(
 
 server.tool(
   "createCustomProjectField",
+  "Create a new custom project field definition with name, type (SHORT_TEXT or DROPDOWN), and optional dropdown values",
   {
     name: z.string().max(40).describe("Field name"),
     instructions: z.string().max(40).optional().describe("Instructions for filling out the field"),
@@ -571,6 +606,7 @@ server.tool(
 
 server.tool(
   "updateCustomProjectField",
+  "Update a custom project field definition using JSON Patch operations",
   {
     id: z.number().describe("Custom Project Field ID"),
     operations: z.array(z.object({
@@ -590,6 +626,7 @@ server.tool(
 
 server.tool(
   "deleteCustomProjectField",
+  "Permanently delete a custom project field definition",
   { id: z.number().describe("Custom Project Field ID to delete") },
   async ({ id }) => {
     await loopioClient.deleteCustomProjectField(id);
@@ -605,6 +642,7 @@ server.tool(
 
 server.tool(
   "listProjectTemplates",
+  "Retrieve a paginated list of available project templates",
   {
     page: z.number().optional().describe("Page number"),
     pageSize: z.number().optional().describe("Items per page")
@@ -619,6 +657,7 @@ server.tool(
 
 server.tool(
   "createProjectFromTemplate",
+  "Create a new project from an existing template, copying structure and settings",
   {
     projectTemplateId: z.number().describe("Project Template ID"),
     name: z.string().describe("Project name"),
@@ -649,6 +688,7 @@ server.tool(
 
 server.tool(
   "listProjectEntries",
+  "Retrieve a paginated list of entries (questions/answers) in a project with optional filtering by section or subsection",
   {
     projectId: z.number().describe("Project ID"),
     sectionId: z.number().optional().describe("Filter by section ID"),
@@ -674,6 +714,7 @@ server.tool(
 
 server.tool(
   "getProjectEntry",
+  "Retrieve detailed information about a specific project entry (question/answer pair)",
   {
     projectEntryId: z.number().describe("Project Entry ID"),
     inline: z.array(z.string()).optional().describe("Inline options")
@@ -688,6 +729,7 @@ server.tool(
 
 server.tool(
   "createProjectEntry",
+  "Create a new entry (question/answer pair) in a project within a specific section or subsection",
   {
     projectId: z.number().describe("Project ID"),
     sectionId: z.number().optional().describe("Section ID (provide either sectionId or subSectionId)"),
@@ -711,6 +753,7 @@ server.tool(
 
 server.tool(
   "updateProjectEntry",
+  "Update a project entry's question text or answer text",
   {
     projectEntryId: z.number().describe("Project Entry ID"),
     question: z.string().optional().describe("Updated question text"),
@@ -730,6 +773,7 @@ server.tool(
 
 server.tool(
   "deleteProjectEntry",
+  "Permanently delete a project entry (question/answer pair)",
   { projectEntryId: z.number().describe("Project Entry ID to delete") },
   async ({ projectEntryId }) => {
     await loopioClient.deleteProjectEntry(projectEntryId);
@@ -745,6 +789,7 @@ server.tool(
 
 server.tool(
   "listProjectSections",
+  "Retrieve a paginated list of top-level sections in a project",
   {
     projectId: z.number().describe("Project ID"),
     page: z.number().optional().describe("Page number"),
@@ -760,6 +805,7 @@ server.tool(
 
 server.tool(
   "getProjectSection",
+  "Retrieve detailed information about a specific project section",
   { sectionId: z.number().describe("Section ID") },
   async ({ sectionId }) => {
     const section = await loopioClient.getProjectSection(sectionId);
@@ -771,6 +817,7 @@ server.tool(
 
 server.tool(
   "createProjectSection",
+  "Create a new top-level section in a project with a name and optional position",
   {
     projectId: z.number().describe("Project ID"),
     name: z.string().describe("Section name"),
@@ -786,6 +833,7 @@ server.tool(
 
 server.tool(
   "updateProjectSection",
+  "Update a project section's name or position",
   {
     sectionId: z.number().describe("Section ID"),
     name: z.string().optional().describe("Updated section name"),
@@ -805,6 +853,7 @@ server.tool(
 
 server.tool(
   "deleteProjectSection",
+  "Permanently delete a project section and all its contents",
   { sectionId: z.number().describe("Section ID to delete") },
   async ({ sectionId }) => {
     await loopioClient.deleteProjectSection(sectionId);
@@ -820,6 +869,7 @@ server.tool(
 
 server.tool(
   "listProjectSubSections",
+  "Retrieve a paginated list of subsections in a project with optional filtering by parent section",
   {
     projectId: z.number().describe("Project ID"),
     sectionId: z.number().optional().describe("Filter by section ID"),
@@ -836,6 +886,7 @@ server.tool(
 
 server.tool(
   "getProjectSubSection",
+  "Retrieve detailed information about a specific project subsection",
   { subSectionId: z.number().describe("SubSection ID") },
   async ({ subSectionId }) => {
     const subSection = await loopioClient.getProjectSubSection(subSectionId);
@@ -847,6 +898,7 @@ server.tool(
 
 server.tool(
   "createProjectSubSection",
+  "Create a new subsection within a parent section in a project",
   {
     projectId: z.number().describe("Project ID"),
     sectionId: z.number().describe("Section ID"),
@@ -863,6 +915,7 @@ server.tool(
 
 server.tool(
   "updateProjectSubSection",
+  "Update a project subsection's name or position",
   {
     subSectionId: z.number().describe("SubSection ID"),
     name: z.string().optional().describe("Updated subsection name"),
@@ -882,6 +935,7 @@ server.tool(
 
 server.tool(
   "deleteProjectSubSection",
+  "Permanently delete a project subsection and all its contents",
   { subSectionId: z.number().describe("SubSection ID to delete") },
   async ({ subSectionId }) => {
     await loopioClient.deleteProjectSubSection(subSectionId);
