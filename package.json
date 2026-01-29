@@ -1,6 +1,6 @@
 {
   "name": "rosemary-charnley-smartbear-loopio-mcp-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP Server (STDIO) for Loopio API - Library Entries management",
   "homepage": "https://github.com/rosemary-charnley-smartbear/Loopio-MCP#readme",
   "bugs": {
